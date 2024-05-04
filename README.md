@@ -14,3 +14,6 @@ player selects square using chess square notation, a1, a2, a3, b1, ..., c2, c3
     (line[0] = 'c' rather than line[0] == 'c').
 
     Player can now select move prior to game start, turn logic also implemented (i.e. if player chooses crosses, they go second)
+
+3rd push:
+    After each move, we now check if the game is won (or drawn).  Slight changes to the function declaration, we do not return the winner of the game, only if the game is won, since only the person who played the last move can win, and it is easier to compute this only when we have a game over.

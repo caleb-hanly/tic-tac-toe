@@ -8,7 +8,6 @@
 const char pieces[3] = {' ', 'O', 'X'};
 const char rows[3] = {'1', '2', '3'};
 const char cols[3] = {'a', 'b', 'c'};
-const size_t board_size = 3;
 bool is_player_turn;
 
 
@@ -62,8 +61,12 @@ void print_board(struct Game *game){
 int get_player_move(struct Game *game) {
     //read players move from stdin
     char line[LINE_BUFFER] = {0};
-    while (fgets(line, sizeof(line), stdin) != NULL) {
+    while (1) {
         printf("Your move: ");
+
+        if(fgets(line, sizeof(line), stdin) == NULL) {
+            break;
+        }
         
         //validate input
         char char0 = line[0];
@@ -140,6 +143,84 @@ int make_move(int move, int pieceindex, struct Game *game){
 }
 
 
+int check_for_win(struct Game *game, int most_recent_move) {
+    int *board = game->board;
+    int board_size = 9;
+    
+    // as only the last move can win, we only check the prev move
+    int winning_piece = board[most_recent_move];
+    printf("Winning Piece %d\n", winning_piece);
+
+    // check verticals
+    if (most_recent_move < 3) {
+        // check below
+        if ((board[most_recent_move + 3] == winning_piece) && (board[most_recent_move + 6] == winning_piece)) {
+            return 1;
+        }
+    } else if (most_recent_move < 6) {
+        //check above and below
+        if ((board[most_recent_move + 3] == winning_piece) && (board[most_recent_move - 3] == winning_piece)) {
+            return 1;
+        }
+    } else {
+        //check above
+        if ((board[most_recent_move - 3] == winning_piece) && (board[most_recent_move - 6] == winning_piece)) {
+            return 1;
+        }
+    }
+
+    // check horizontals
+    if (most_recent_move % 3 == 0) {
+        // check right
+        if ((board[most_recent_move + 1] == winning_piece) && (board[most_recent_move + 2] == winning_piece)) {
+            return 1;
+        }
+    } else if (most_recent_move % 3 == 1) {
+        //check left and right
+        if ((board[most_recent_move + 1] == winning_piece) && (board[most_recent_move - 1] == winning_piece)) {
+            return 1;
+        }
+    } else {
+        //check left
+        if ((board[most_recent_move - 1] == winning_piece) && (board[most_recent_move - 2] == winning_piece)) {
+            return 1;
+        }
+    }
+
+    // check both diagonals (0->4->8) and (2->4->6)
+    if ((board[0] == winning_piece) && (board[4] == winning_piece) && (board[8] == winning_piece)) {
+        return 1;
+    } else if ((board[2] == winning_piece) && (board[4] == winning_piece) && (board[6] == winning_piece)) {
+        return 1;
+    }
+
+    // this move did not win the game
+    return 0;
+}
+
+
+int check_board(struct Game *game, int most_recent_move) {
+    int *board = game->board;
+
+    // check if someone has won
+    if (check_for_win(game, most_recent_move) > 0) {
+        return 1;
+    }
+
+    // check if board is full (stalemate)
+    int board_size = 9;
+    for (int i = 0; i < board_size; i++) {
+        if (board[i] == 0) {
+            // game is not in stalemate
+            return 0;
+        }
+    }
+
+    // game is in stalemate
+    return 2;
+}
+
+
 int main() {
     struct Game game = {{0}};
     if (setup_game(&game) < 0) {
@@ -147,31 +228,44 @@ int main() {
         return -1;
     }
 
-    int player_move;
-    int computer_move;
+    int new_move;
     while (1) {
         if (is_player_turn) {
             // do player move
             print_board(&game);
-            printf("\nYour turn:");
-            player_move = get_player_move(&game);
-            if (player_move < 0) {
-                printf("Error in reading from stdin\n");
+
+            new_move = get_player_move(&game);
+            if (new_move == -1) {
+                printf("standard input closed\n");
                 return -1;
             }
-
-            make_move(player_move, game.player_piece, &game);
-            is_player_turn = false;
+            make_move(new_move, game.player_piece, &game);
         } else {
             // do computer move
             print_board(&game);
             sleep(1);
 
-            computer_move = get_computer_move(&game);
-            make_move(computer_move, game.computer_piece, &game);
-            is_player_turn = true;
+            new_move = get_computer_move(&game);
+            make_move(new_move, game.computer_piece, &game);
         }
 
         // check if the game is over
+        if (check_board(&game, new_move) == 1) {
+            if (is_player_turn) {
+                print_board(&game);
+                printf("You win!  Congrats!\n");
+                return 0;
+            } else {
+                print_board(&game);
+                printf("You lose, ggwp\n");
+                return 0;
+            }
+        } else if (check_board(&game, new_move) == 2) {
+            printf("Stalemate.  Well fought!\n");
+            return 0;
+        } else {
+            // continue playing
+            is_player_turn = !is_player_turn;
+        }
     }
 }

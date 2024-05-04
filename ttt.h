@@ -40,9 +40,9 @@ int get_computer_move(struct Game *game);
 int make_mode(int move, int *pieceindex, struct Game *game);
 
 /*Check the current state of the game
-**If someone wins, return that player val (1 for player, 2 for computer)
-**If it is a draw, return -1
+**If someone wins, return 1
+**If it is a draw, return 2
 **If the game is not yet over, return 0*/
-int check_board(struct Game *game);
+int check_board(struct Game *game, int most_recent_move);
 
 #endif
