@@ -18,8 +18,9 @@ struct Game{
     int computer_piece;
 };
 
-/*Allow the player to select Naughts or Crosses*/
-void setup_board();
+/*allow the player to select Naughts or Crosses
+**creates the game struct*/
+int setup_game();
 
 /*print out a board given an array of pieces
 **(0 = empty, 1 = player, 2 = computer)*/

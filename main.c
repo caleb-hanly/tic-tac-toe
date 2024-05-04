@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdbool.h>
+#include <unistd.h>
 #include "ttt.h"
 
 #define LINE_BUFFER 16
@@ -7,7 +9,40 @@ const char pieces[3] = {' ', 'O', 'X'};
 const char rows[3] = {'1', '2', '3'};
 const char cols[3] = {'a', 'b', 'c'};
 const size_t board_size = 3;
-const int turn = 1;
+bool is_player_turn;
+
+
+int setup_game(struct Game *game) {
+    char line[LINE_BUFFER];
+    while (1) {
+        // read in stdin
+        printf("Do you want to go first (y/n)\n");
+        if (fgets(line, LINE_BUFFER, stdin) == NULL) {
+            break;
+        }
+
+        // validate input
+        if (line[1] != '\n') {
+            printf("please type exactly one character\n");
+            continue;
+        }
+
+        if (line[0] != 'y' && line[0] != 'n') {
+            printf("please respond with only 'y' or 'n'\n");
+            continue;
+        } else if (line[0] == 'y') {
+            game->player_piece = 1;
+            game->computer_piece = 2;
+            is_player_turn = true;
+        } else {
+            game->player_piece = 2;
+            game->computer_piece = 1;
+            is_player_turn = false;
+        }
+        return 0;
+    }
+    return -1;
+}
 
 
 void print_board(struct Game *game){
@@ -43,7 +78,7 @@ int get_player_move(struct Game *game) {
             col = 0;
         } else if (char0 == 'b') {
             col = 1;
-        } else if (char0 = 'c') {
+        } else if (char0 == 'c') {
             col = 2;
         } else {
             printf("error in column input\n");
@@ -55,7 +90,7 @@ int get_player_move(struct Game *game) {
             row = 2;
         } else if (char1 == '2') {
             row = 1;
-        } else if (char1 = '3') {
+        } else if (char1 == '3') {
             row = 0;
         } else {
             printf("error in row input\n");
@@ -74,7 +109,7 @@ int get_player_move(struct Game *game) {
         // check that the given square is not occupied
         int *board = game->board;
         if (board[square] != 0) {
-            printf("this tile is occupies\n");
+            printf("this tile is occupied\n");
             continue;
         }
 
@@ -104,28 +139,39 @@ int make_move(int move, int pieceindex, struct Game *game){
     return 0;
 }
 
-int main() {
 
-    int player_piece = 1;
-    int computer_piece = 2;
-    struct Game game = {{0}, player_piece, computer_piece};
+int main() {
+    struct Game game = {{0}};
+    if (setup_game(&game) < 0) {
+        printf("error in game setup \n");
+        return -1;
+    }
 
     int player_move;
     int computer_move;
     while (1) {
-        //player move
-        player_move = get_player_move(&game);
-        if (player_move < 0) {
-            printf("Error in reading from stdin\n");
-            return -1;
+        if (is_player_turn) {
+            // do player move
+            print_board(&game);
+            printf("\nYour turn:");
+            player_move = get_player_move(&game);
+            if (player_move < 0) {
+                printf("Error in reading from stdin\n");
+                return -1;
+            }
+
+            make_move(player_move, game.player_piece, &game);
+            is_player_turn = false;
+        } else {
+            // do computer move
+            print_board(&game);
+            sleep(1);
+
+            computer_move = get_computer_move(&game);
+            make_move(computer_move, game.computer_piece, &game);
+            is_player_turn = true;
         }
-        
-        make_move(player_move, game.player_piece, &game);
-        print_board(&game);
-        
-        //computer move
-        computer_move = get_computer_move(&game);
-        make_move(computer_move, game.computer_piece, &game);
-        print_board(&game);
+
+        // check if the game is over
     }
 }
