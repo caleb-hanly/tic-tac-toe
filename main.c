@@ -247,6 +247,74 @@ int evaluate(int *board, int player) {
    return 0;
 }
 
+int alphabeta(int *board, int depth, int alpha, int beta, bool maximising_player, int max_player_piece) {
+    // get the piece type of the opponent
+    int opponent_piece = (max_player_piece == 1) ? 2 : 1;
+
+    // if someone has won, return best eval for that player
+    if ((maximising_player) && check_for_win(board, opponent_piece)) {
+        // static eval is upper bounded by 8, so by returning 9 this is clearly the best position
+        return -9;
+    } else if ((!maximising_player) && check_for_win(board, max_player_piece)) {
+        return 9;
+    }
+
+    // if depth == 0 -> return static evaluation
+    if (depth == 0) {
+        return evaluate(board, (maximising_player) ? max_player_piece : opponent_piece);
+    }
+
+    // else pick the best move for the current player
+    if (maximising_player) {
+        int maxeval = -9;
+        
+        //for move in moves
+        for (int i = 0; i < 9; i++) {
+            if (board[i] != 0) {
+                continue;
+            }
+            make_move(i, max_player_piece, board);
+            
+            // recursively evaluate the position after this move
+            int eval = alphabeta(board, depth-1, alpha, beta, false, max_player_piece);
+            maxeval = max(maxeval, eval);
+            unmove(i, board);
+
+            // prune search tree
+            alpha = max(alpha, eval);
+            if (beta <= alpha) {
+                // this position is better for the player than the other moves in the search tree
+                // so the opponent should never consider this case (and if they do, good) -> hence prune
+                break;
+            }
+        }
+        return maxeval;
+    } else {
+        //this is the opponent, return mineval
+        int mineval = 9;
+        for (int i = 0; i < 9; i++) {
+            if (board[i] != 0) {
+                continue;
+            }
+            make_move(i, opponent_piece, board);
+
+            // recursively evaluate the new position
+            int eval = alphabeta(board, depth - 1, alpha, beta, true, max_player_piece);
+            mineval = min(mineval, eval);
+            unmove(i, board);
+
+            // prune search tree
+            beta = min(eval, beta);
+            if (beta <= alpha) {
+                // this move is better for the opponent than the worst case in the other subtree
+                // so the computer should never consider this case -> hence prune
+                break;
+            }
+        }
+        return mineval;
+    }
+}
+
 int get_computer_move(struct Game *game){
     int *board = game->board;
     int computer_piece = game->computer_piece;
@@ -257,6 +325,7 @@ int get_computer_move(struct Game *game){
         if (board[i] != 0) {continue;}
         make_move(i, computer_piece, board);
         int eval = minimax(board, 9, false, computer_piece);
+        //int eval = alphabeta(board, 9, -10, 10, false, computer_piece);
         unmove(i, board);
         if (eval > best_eval) {
             best_move = i;
@@ -290,7 +359,7 @@ int main() {
         } else {
             // do computer move
             print_board(gameptr->board);
-            sleep(1);
+            //sleep(1);
 
             new_move = get_computer_move(gameptr);
             make_move(new_move, game.computer_piece, gameptr->board);

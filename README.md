@@ -24,3 +24,6 @@ player selects square using chess square notation, a1, a2, a3, b1, ..., c2, c3
     minmax has been implemented for improved computer moves.  The static evaluation simply returns neutral, so minmax only considers three cases of the game, a win, a loss, or neither (either stalemat or in play).  As such, a depth of at least 5 is required for the algorithm to not miss forced wins.  As for speed, the algorithm still operates fairly quickly on an empty board with depth 9 (the board with the largest number of computations required).  However, implementing alpha beta pruning will still be an interesting experiment.
 
     Function prototypes were edited, mainly to only pass in the int array board rather than the whole game struct, for simplicity's sake.
+
+5th commit:
+    implemented minmax with alpha-beta pruning, however, in both algorithms I discovered an edgecase where the game a2-a3 b2-b3 c2 is played, leading to an easy win for the player.Will need to fix.  Also need a more better evaluate algorithm.
