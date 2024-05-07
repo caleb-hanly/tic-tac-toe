@@ -24,3 +24,10 @@ player selects square using chess square notation, a1, a2, a3, b1, ..., c2, c3
 5th commit:
     - Implemented minmax with alpha-beta pruning
     - However, in both algorithms I discovered an edgecase where the game a2-a3 b2-b3 c2 is played, leading to an easy win for the player.  Will need to fix.  Also need a more better evaluate algorithm.
+
+6th commit:
+    - The cause of the error described in commit 5 was due to Minimax not checking for if the game is in stalemate, thus sometimes concluding that the game is lost when there is hope to draw.  This has now been fixed.
+    - Main function moved to new file, had to also move the boolean var 'is_player_turn' to the header file
+    - Makefile created to help compile the program
+    - Static evaluation function improved, it now evaluates a position based on how many winning oppotunities a player has, minus how many winning opportunities the opponent has
+    - AI now plays both offensively and defensively, rather than randombly until a win or loss is found in Minimax search.

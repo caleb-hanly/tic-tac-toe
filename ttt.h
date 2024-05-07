@@ -1,6 +1,8 @@
 #ifndef TTT_H
 #define TTT_H
 
+#include <stdbool.h>
+
 /*
 <row>
 
@@ -17,6 +19,8 @@ struct Game{
     int player_piece;
     int computer_piece;
 };
+
+extern bool is_player_turn;
 
 /*allow the player to select Naughts or Crosses
 **creates the game struct*/
@@ -59,5 +63,11 @@ int evaluate(int *board, int player);
 **If it is a draw, return 2
 **If the game is not yet over, return 0*/
 int check_board(struct Game *game, int most_recent_move);
+
+/*Check if the game is won for the winning piece*/
+int check_for_win(int *board, int winning_piece);
+
+/*Check if the game is in stalemate*/
+int check_for_stalemate(int *board);
 
 #endif
